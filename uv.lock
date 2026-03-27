@@ -28,7 +28,7 @@ wheels = [
 ]
 
 [[package]]
-name = "templa"
+name = "sphinx-rglob-toctree"
 version = "0.1.0"
 source = { virtual = "." }
 
