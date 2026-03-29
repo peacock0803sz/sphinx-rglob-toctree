@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 
@@ -32,9 +30,8 @@ class RGlobToctreeDirective(SphinxDirective):
         root_rel = self.options.get("root", ".")
         srcdir = Path(self.env.srcdir)
 
-        # env.relfn2path() で現在のドキュメントからの相対パスを解決
-        _, abs_fn = self.env.relfn2path(root_rel)
-        root_abs = Path(abs_fn)
+        # srcdir からの相対パスとして解決 (ドキュメント位置に依存しない)
+        root_abs = srcdir / root_rel
 
         # srcdir 範囲チェック (symlink/.. 対策)
         try:
@@ -66,7 +63,9 @@ class RGlobToctreeDirective(SphinxDirective):
 
         # :hidden: 指定時は bullet list を省略
         if "hidden" not in self.options:
-            bullet = _build_bullet_list(tree, "reversed" in self.options)
+            bullet = _build_bullet_list(
+                tree, "reversed" in self.options, self.env.docname
+            )
             if bullet is not None:
                 result_nodes.append(bullet)
 
@@ -80,7 +79,7 @@ class RGlobToctreeDirective(SphinxDirective):
         toctree["entries"] = [(None, dn) for dn in docnames]
         toctree["includefiles"] = list(docnames)
         toctree["maxdepth"] = self.options.get("maxdepth", -1)
-        toctree["hidden"] = "hidden" in self.options
+        toctree["hidden"] = True
         toctree["caption"] = self.options.get("caption")
         toctree["titlesonly"] = "titlesonly" in self.options
         toctree["glob"] = False
@@ -99,13 +98,14 @@ class RGlobToctreeDirective(SphinxDirective):
         return toctree
 
 
-def _make_doc_xref(docname: str, text: str) -> addnodes.pending_xref:
+def _make_doc_xref(docname: str, text: str, refdoc: str) -> addnodes.pending_xref:
     """std:doc 相当の cross-reference ノードを生成"""
     ref = addnodes.pending_xref(
         "",
         refdomain="std",
         reftype="doc",
-        reftarget=docname,
+        reftarget=f"/{docname}",
+        refdoc=refdoc,
         refexplicit=True,
         refwarn=True,
     )
@@ -122,7 +122,9 @@ def _collect_all_docs(tree: DirectoryTree) -> list[str]:
     return result
 
 
-def _build_bullet_list(tree: DirectoryTree, reverse: bool) -> nodes.bullet_list | None:
+def _build_bullet_list(
+    tree: DirectoryTree, reverse: bool, refdoc: str
+) -> nodes.bullet_list | None:
     """再帰的に nested bullet list を構築"""
     items: list[nodes.list_item] = []
 
@@ -133,7 +135,7 @@ def _build_bullet_list(tree: DirectoryTree, reverse: bool) -> nodes.bullet_list 
         para = nodes.paragraph("", "", nodes.strong("", name))
         item += para
 
-        child_list = _build_bullet_list(subtree, reverse)
+        child_list = _build_bullet_list(subtree, reverse, refdoc)
         if child_list is not None:
             item += child_list
         items.append(item)
@@ -144,7 +146,7 @@ def _build_bullet_list(tree: DirectoryTree, reverse: bool) -> nodes.bullet_list 
         item = nodes.list_item()
         # ファイル名部分のみ表示 (パスの最後のセグメント)
         display_name = docname.rsplit("/", 1)[-1]
-        para = nodes.paragraph("", "", _make_doc_xref(docname, display_name))
+        para = nodes.paragraph("", "", _make_doc_xref(docname, display_name, refdoc))
         item += para
         items.append(item)
 
