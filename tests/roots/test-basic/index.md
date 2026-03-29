@@ -1,5 +1,8 @@
 # Test Project
 
-```{rglob-toctree}
-:root: plans
+```{toctree}
+:maxdepth: 1
+:glob:
+
+*/index
 ```
