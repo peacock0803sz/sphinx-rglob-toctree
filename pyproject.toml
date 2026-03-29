@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sphinx-rglob-toctree"
-version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.14"
+dynamic = ["version"]
 dependencies = [
     "sphinx>=8.0",
 ]
