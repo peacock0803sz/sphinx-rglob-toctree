@@ -367,7 +367,6 @@ name = "sphinx-rglob-toctree"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "myst-parser" },
     { name = "sphinx" },
 ]
 
@@ -381,7 +380,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "myst-parser", specifier = ">=5.0.0" },
     { name = "myst-parser", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.8" },
