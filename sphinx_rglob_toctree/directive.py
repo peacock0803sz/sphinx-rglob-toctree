@@ -54,10 +54,10 @@ class RGlobToctreeDirective(SphinxDirective):
         recurse_depth = self.options.get("recurse-depth", 0)
         tree = scan_directory_tree(srcdir, str(root_from_src), suffixes, recurse_depth)
 
-        flat_docs = _collect_all_docs(tree)
+        immediate = _collect_immediate_children(tree, str(root_from_src))
 
         if "reversed" in self.options:
-            flat_docs.reverse()
+            immediate.reverse()
 
         result_nodes: list[nodes.Node] = []
 
@@ -69,8 +69,8 @@ class RGlobToctreeDirective(SphinxDirective):
             if bullet is not None:
                 result_nodes.append(bullet)
 
-        if flat_docs:
-            result_nodes.append(self._build_toctree(flat_docs))
+        if immediate:
+            result_nodes.append(self._build_toctree(immediate))
 
         return result_nodes
 
@@ -79,7 +79,7 @@ class RGlobToctreeDirective(SphinxDirective):
         toctree["entries"] = [(None, dn) for dn in docnames]
         toctree["includefiles"] = list(docnames)
         toctree["maxdepth"] = self.options.get("maxdepth", -1)
-        toctree["hidden"] = True
+        toctree["hidden"] = "hidden" in self.options
         toctree["caption"] = self.options.get("caption")
         toctree["titlesonly"] = "titlesonly" in self.options
         toctree["glob"] = False
@@ -113,13 +113,13 @@ def _make_doc_xref(docname: str, text: str, refdoc: str) -> addnodes.pending_xre
     return ref
 
 
-def _collect_all_docs(tree: DirectoryTree) -> list[str]:
-    """ツリー内の全ドキュメント docname をフラットに収集"""
-    result: list[str] = []
-    result.extend(tree["files"])
-    for _name, subtree in sorted(tree["dirs"].items()):
-        result.extend(_collect_all_docs(subtree))
-    return result
+def _collect_immediate_children(tree: DirectoryTree, root_prefix: str) -> list[str]:
+    """ツリーの直下の子 (サブディレクトリ index + ファイル) を収集"""
+    children: list[str] = []
+    for name in sorted(tree["dirs"].keys()):
+        children.append(f"{root_prefix}/{name}/index")
+    children.extend(sorted(tree["files"]))
+    return children
 
 
 def _build_bullet_list(

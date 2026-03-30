@@ -21,11 +21,8 @@ def test_basic_hierarchy(app):
 
 
 @pytest.mark.sphinx("html", testroot="basic")
-@pytest.mark.parametrize(
-    "docname", ["plans/2026/03/23/ham", "plans/2026/03/24/spam", "plans/2026/02/28/egg"]
-)
-def test_toctree_has_all_docs(app, docname):
-    """hidden toctree が全リーフ文書を含む"""
+def test_toctree_has_immediate_children(app):
+    """hidden toctree が直下の子 (中間 index) のみを含む"""
     app.build()
     doctree = app.env.get_doctree("plans/index")
     toctrees = list(doctree.findall(addnodes.toctree))
@@ -33,7 +30,9 @@ def test_toctree_has_all_docs(app, docname):
 
     toc = toctrees[0]
     includefiles = toc["includefiles"]
-    assert docname in includefiles
+    # plans/index の直下には 2026/index のみ
+    assert "plans/2026/index" in includefiles
+    assert len(includefiles) == 1
 
 
 @pytest.mark.sphinx("html", testroot="basic")
@@ -69,3 +68,44 @@ def test_no_warnings(app, warning):
     warnings = warning.getvalue()
     # toctree 関連の警告がないことを確認
     assert "rglob-toctree" not in warnings
+
+
+@pytest.mark.sphinx("html", testroot="basic")
+@pytest.mark.parametrize(
+    "page",
+    [
+        "plans/2026/index.html",
+        "plans/2026/02/index.html",
+        "plans/2026/02/28/index.html",
+        "plans/2026/03/index.html",
+        "plans/2026/03/23/index.html",
+        "plans/2026/03/24/index.html",
+    ],
+)
+def test_intermediate_pages_generated(app, page):
+    """中間ディレクトリの stub ページが出力に含まれる"""
+    app.build()
+    assert (app.outdir / page).exists(), f"{page} が生成されていない"
+
+
+@pytest.mark.sphinx("html", testroot="basic")
+def test_stubs_cleaned_up_after_build(app):
+    """ビルド後にソースツリーからスタブが削除される"""
+    app.build()
+    srcdir = app.srcdir
+    # スタブは plans/2026/index.md 等に生成されるが、ビルド後に削除される
+    stub_candidates = [
+        srcdir / "plans" / "2026" / "index.md",
+        srcdir / "plans" / "2026" / "03" / "index.md",
+        srcdir / "plans" / "2026" / "03" / "24" / "index.md",
+    ]
+    for stub in stub_candidates:
+        assert not stub.exists(), f"スタブが残留: {stub}"
+
+
+@pytest.mark.sphinx("html", testroot="basic")
+def test_existing_index_not_overwritten(app):
+    """plans/index.md (ユーザー作成) が上書きされない"""
+    app.build()
+    content = (app.srcdir / "plans" / "index.md").read_text()
+    assert "rglob-toctree" in content, "plans/index.md がスタブで上書きされた"
