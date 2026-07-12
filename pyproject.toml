@@ -18,7 +18,7 @@ dev = [
     "myst-parser>=5.1.0",
     "pytest>=9.1.1",
     "ruff>=0.15.21",
-    "ty>=0.0.56",
+    "ty>=0.0.58",
 ]
 
 [tool.ruff.lint]
