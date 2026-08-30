@@ -446,7 +446,7 @@ requires-dist = [
     { name = "myst-parser", marker = "extra == 'dev'", specifier = ">=5.1.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.1.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.16.4" },
-    { name = "sphinx", specifier = ">=8.0" },
+    { name = "sphinx", specifier = ">=8.2.3" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.73" },
 ]
 provides-extras = ["dev"]
