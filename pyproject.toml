@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sphinx-rglob-toctree"
 description = ""
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.14.7"
 dynamic = ["version"]
 dependencies = [
     "sphinx>=9.1.0",
